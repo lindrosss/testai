@@ -126,7 +126,7 @@ export function AutoCalculator() {
                   type="number"
                   min={1}
                   max={1000000}
-                  step={100}
+                  step={1}
                   value={budgetUsd}
                   onChange={(e) => setBudgetUsd(e.target.value)}
                   className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900/10"
