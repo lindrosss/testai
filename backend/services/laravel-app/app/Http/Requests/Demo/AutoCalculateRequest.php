@@ -20,7 +20,7 @@ class AutoCalculateRequest extends FormRequest
     {
         return [
             'car_model_id' => ['required', 'integer', 'exists:car_models,id'],
-            'budget_usd' => ['required', 'integer', 'min:1', 'max:500000'],
+            'budget_usd' => ['required', 'integer', 'min:1', 'max:1000000'],
         ];
     }
 }

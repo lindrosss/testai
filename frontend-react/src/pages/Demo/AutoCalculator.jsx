@@ -121,19 +121,17 @@ export function AutoCalculator() {
               </label>
 
               <label className="block">
-                <div className="text-sm font-medium text-slate-800">Бюджет на авто</div>
+                <div className="text-sm font-medium text-slate-800">Сумма (USD)</div>
                 <input
                   type="number"
                   min={1}
+                  max={1000000}
                   step={100}
                   value={budgetUsd}
                   onChange={(e) => setBudgetUsd(e.target.value)}
                   className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900/10"
                   required
                 />
-                <div className="mt-1 text-xs text-slate-500">
-                  Подставляется как цена покупки (демо‑допущение).
-                </div>
               </label>
 
               <div className="md:col-span-3 flex items-center justify-between gap-3">
