@@ -9,14 +9,6 @@ function Section({ title, children }) {
   );
 }
 
-function CodeLine({ children }) {
-  return (
-    <code className="rounded bg-slate-100 px-1.5 py-0.5 text-[12px] text-slate-800">
-      {children}
-    </code>
-  );
-}
-
 export function HelpModal({ open, onClose }) {
   useEffect(() => {
     if (!open) return;
@@ -64,9 +56,8 @@ export function HelpModal({ open, onClose }) {
                   детализацию по статьям.
                 </li>
                 <li>
-                  <span className="font-medium">Склад</span>: CRUD таблица “авто в
-                  наличии” со статусами (<CodeLine>in_stock</CodeLine>,{' '}
-                  <CodeLine>reserved</CodeLine>, <CodeLine>sold</CodeLine>).
+                  <span className="font-medium">Склад</span>: список “авто в наличии”
+                  с актуальными статусами.
                 </li>
                 <li>
                   <span className="font-medium">Бот</span>: отвечает на простые
@@ -76,61 +67,39 @@ export function HelpModal({ open, onClose }) {
             </Section>
 
             <Section title="Откуда берётся “откуда везём”">
-              Направление доставки привязано к модели в базе данных (
-              <CodeLine>car_models.shipping_origin_id</CodeLine>). Клиент не выбирает
+              Направление доставки привязано к выбранной модели. Клиент не выбирает
               его в форме — оно показывается в результате расчёта.
             </Section>
 
             <Section title="Формула (в демо)">
-              Итог:
-              <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-[13px] text-slate-800">
-                total = purchase + customsDuty + recyclingFee + logistics + commission
-              </div>
-              <div className="mt-2 text-xs text-slate-600">
-                purchase — введённая сумма (демо‑допущение “цена покупки”).
-              </div>
-            </Section>
-
-            <Section title="Основные сущности БД">
-              <ul className="list-disc pl-5 space-y-1">
+              Итоговая стоимость складывается из:
+              <ul className="mt-2 list-disc pl-5 space-y-1">
                 <li>
-                  <CodeLine>shipping_origins</CodeLine> — направления/страны
-                  отправления (логистика, сроки)
+                  <span className="font-medium">Стоимость авто</span> (введённая сумма
+                  в демо)
                 </li>
                 <li>
-                  <CodeLine>car_models</CodeLine> — справочник моделей (бренд, модель,
-                  мощность) + привязка направления доставки
+                  <span className="font-medium">Таможенная пошлина</span>
                 </li>
                 <li>
-                  <CodeLine>stock_cars</CodeLine> — “авто в наличии”
+                  <span className="font-medium">Утильсбор</span> —{' '}
+                  <span className="font-medium">привязан к мощности двигателя</span>{' '}
+                  (чем выше мощность, тем выше утильсбор)
                 </li>
                 <li>
-                  <CodeLine>callback_requests</CodeLine> — заявки “перезвоните”
-                </li>
-              </ul>
-            </Section>
-
-            <Section title="Публичное API (демо)">
-              <ul className="list-disc pl-5 space-y-1">
-                <li>
-                  <CodeLine>GET /api/demo/auto/reference</CodeLine> — список моделей
+                  <span className="font-medium">Логистика</span> (зависит от
+                  направления доставки)
                 </li>
                 <li>
-                  <CodeLine>POST /api/demo/auto/calculate</CodeLine> — расчет (
-                  <CodeLine>car_model_id</CodeLine>, <CodeLine>budget_usd</CodeLine>)
-                </li>
-                <li>
-                  <CodeLine>GET /api/demo/stock-cars</CodeLine> — склад
-                </li>
-                <li>
-                  <CodeLine>POST /api/demo/bot/message</CodeLine> — сообщения бота
+                  <span className="font-medium">Комиссия сервиса</span>
                 </li>
               </ul>
             </Section>
 
             <div className="rounded-xl border border-slate-200 bg-white p-4">
               <div className="text-xs text-slate-500">
-                Подсказка: нажмите <CodeLine>Esc</CodeLine> чтобы закрыть окно.
+                Подсказка: нажмите <span className="font-medium">Esc</span>, чтобы
+                закрыть окно.
               </div>
             </div>
           </div>
