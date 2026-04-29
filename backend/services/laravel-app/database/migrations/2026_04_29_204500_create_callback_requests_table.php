@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('phone', 32);
             $table->string('topic')->default('callback');
             $table->text('message')->nullable();
-            $table->string('status')->default('new'); // new | processed
+            $table->string('status')->default('new'); // new | in_progress | success | failed
             $table->timestamps();
 
             $table->index(['status']);

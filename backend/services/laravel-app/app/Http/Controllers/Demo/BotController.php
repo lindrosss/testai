@@ -109,7 +109,7 @@ class BotController extends Controller
 
         if ($this->hasAny($m, ['склад открыть', 'открыть склад', 'покажи склад'])) {
             return response()->json([
-                'reply' => 'Откройте вкладку “Склад” вверху — там полный список и статусы.',
+                'reply' => 'Откройте вкладку “Параметры” вверху — там зависимости по моделям.',
                 'quick_replies' => $this->defaultQuickReplies(),
                 'context' => ['next' => null],
             ]);

@@ -9,6 +9,7 @@ import { ResetPassword } from './pages/Auth/ResetPassword';
 import { VerifyEmail } from './pages/Auth/VerifyEmail';
 import { AutoCalculator } from './pages/Demo/AutoCalculator';
 import { StockCars } from './pages/Demo/StockCars';
+import { CallbackRequests } from './pages/Demo/CallbackRequests';
 
 export const router = createBrowserRouter([
   {
@@ -21,6 +22,7 @@ export const router = createBrowserRouter([
       { path: '/demo', element: <Navigate to="/demo/auto" replace /> },
       { path: '/demo/auto', element: <AutoCalculator /> },
       { path: '/demo/stock', element: <StockCars /> },
+      { path: '/demo/callbacks', element: <CallbackRequests /> },
     ],
   },
   {

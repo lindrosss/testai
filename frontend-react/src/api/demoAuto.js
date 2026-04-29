@@ -1,12 +1,22 @@
 import { api } from './axios';
+import { getDemoClientId } from './demoClient';
+
+function demoHeaders() {
+  return { 'X-Demo-Client': getDemoClientId() };
+}
 
 export async function fetchAutoReference() {
-  const { data } = await api.get('/demo/auto/reference');
+  const { data } = await api.get('/demo/auto/reference', { headers: demoHeaders() });
   return data;
 }
 
 export async function calculateAutoCost(payload) {
-  const { data } = await api.post('/demo/auto/calculate', payload);
+  const { data } = await api.post('/demo/auto/calculate', payload, { headers: demoHeaders() });
+  return data;
+}
+
+export async function fetchAutoHistory() {
+  const { data } = await api.get('/demo/auto/history', { headers: demoHeaders() });
   return data;
 }
 

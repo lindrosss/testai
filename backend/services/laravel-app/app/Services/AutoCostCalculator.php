@@ -10,6 +10,24 @@ use App\Models\ShippingOrigin;
 class AutoCostCalculator
 {
     /**
+     * Preview recycling fee for a given engine power.
+     *
+     * @return array{fee_usd:int, base_usd:int, per_hp_usd:float, engine_power_hp:int}
+     */
+    public function recyclingPreview(int $enginePowerHp): array
+    {
+        [$base, $perHp] = $this->recyclingParams($enginePowerHp);
+        $fee = (int) round($base + ($enginePowerHp * $perHp));
+
+        return [
+            'fee_usd' => $fee,
+            'base_usd' => $base,
+            'per_hp_usd' => $perHp,
+            'engine_power_hp' => $enginePowerHp,
+        ];
+    }
+
+    /**
      * @return array{
      *   input: array<string, mixed>,
      *   breakdown: array<string, array{title: string, amount_usd: int, details?: array<string, mixed>}>,
@@ -25,8 +43,10 @@ class AutoCostCalculator
         $customsDuty = (int) round($purchase * $dutyRate);
 
         // 2) Утильсбор зависит от мощности (ступени)
-        [$recyclingBase, $recyclingPerHp] = $this->recyclingParams($carModel->engine_power_hp);
-        $recyclingFee = (int) round($recyclingBase + ($carModel->engine_power_hp * $recyclingPerHp));
+        $recyclingPreview = $this->recyclingPreview($carModel->engine_power_hp);
+        $recyclingBase = $recyclingPreview['base_usd'];
+        $recyclingPerHp = $recyclingPreview['per_hp_usd'];
+        $recyclingFee = $recyclingPreview['fee_usd'];
 
         // 3) Логистика зависит от направления + небольшая поправка на премиум‑бренд
         $brandFactor = $this->brandLogisticsFactor($carModel->brand);

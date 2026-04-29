@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import useSWR from 'swr';
 import { Alert } from '../../components/Common/Alert';
 import { Loading } from '../../components/Common/Loading';
-import { calculateAutoCost, fetchAutoReference } from '../../api/demoAuto';
+import { calculateAutoCost, fetchAutoHistory, fetchAutoReference } from '../../api/demoAuto';
 
 function money(n) {
   try {
@@ -18,7 +18,14 @@ function money(n) {
 
 export function AutoCalculator() {
   const { data, error, isLoading } = useSWR('demo:auto:reference', fetchAutoReference);
+  const {
+    data: historyRes,
+    error: historyError,
+    isLoading: historyLoading,
+    mutate: mutateHistory,
+  } = useSWR('demo:auto:history', fetchAutoHistory);
   const carModels = data?.car_models || [];
+  const history = historyRes?.data || [];
 
   const [carModelId, setCarModelId] = useState('');
   const [budgetUsd, setBudgetUsd] = useState(25000);
@@ -55,6 +62,7 @@ export function AutoCalculator() {
         budget_usd: Number(budgetUsd),
       });
       setCalc(res);
+      await mutateHistory();
     } catch (err) {
       const msg =
         err?.response?.data?.message ||
@@ -174,6 +182,9 @@ export function AutoCalculator() {
                 <div className="text-3xl font-semibold text-slate-900 font-mono tabular-nums">
                   {money(calc.total_usd)}
                 </div>
+                {calc.meta?.from_cache ? (
+                  <div className="mt-1 text-xs text-slate-500">Результат из кэша (Redis)</div>
+                ) : null}
               </div>
               <div className="text-right text-xs text-slate-500">
                 <div>{calc.input?.car_model?.brand} {calc.input?.car_model?.model}</div>
@@ -250,6 +261,85 @@ export function AutoCalculator() {
           </div>
         </div>
       ) : null}
+
+      <div className="rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-[1px]">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className="text-sm font-semibold text-slate-900">История расчётов</div>
+            <div className="mt-1 text-xs text-slate-500">
+              Сохраняется в Redis для текущего пользователя (последние 20).
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => mutateHistory()}
+            className="rounded-2xl border border-slate-200 bg-white/70 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-white"
+          >
+            Обновить
+          </button>
+        </div>
+
+        {historyLoading ? (
+          <div className="mt-4">
+            <Loading label="Загружаю историю…" />
+          </div>
+        ) : historyError ? (
+          <div className="mt-4">
+            <Alert type="error" title="История недоступна" message="Не удалось загрузить историю из Redis." />
+          </div>
+        ) : history.length === 0 ? (
+          <div className="mt-4 text-sm text-slate-600">Пока нет расчётов. Нажмите “Рассчитать”.</div>
+        ) : (
+          <div className="mt-4 overflow-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-50 text-slate-600">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium">Время</th>
+                  <th className="px-4 py-3 text-left font-medium">Модель</th>
+                  <th className="px-4 py-3 text-left font-medium">Откуда</th>
+                  <th className="px-4 py-3 text-left font-medium">Сумма</th>
+                  <th className="px-4 py-3 text-left font-medium">Итог</th>
+                  <th className="px-4 py-3 text-left font-medium">Кэш</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {history.map((h) => (
+                  <tr key={h.id} className="hover:bg-white/70 transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-500">
+                      {h.at ? new Date(h.at).toLocaleString() : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {h.result?.car_model?.brand ? (
+                        <span className="font-medium text-slate-900">
+                          {h.result.car_model.brand} {h.result.car_model.model}
+                        </span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">{h.result?.origin?.name || '—'}</td>
+                    <td className="px-4 py-3 text-slate-700 font-mono tabular-nums">
+                      {h.input?.budget_usd != null ? money(h.input.budget_usd) : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-slate-900 font-semibold font-mono tabular-nums">
+                      {h.result?.total_usd != null ? money(h.result.total_usd) : '—'}
+                    </td>
+                    <td className="px-4 py-3">
+                      {h.from_cache ? (
+                        <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-slate-700">
+                          да
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-500">нет</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

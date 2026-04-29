@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Modules\Notification\Http\Controllers\InternalEmailController;
 use App\Http\Controllers\Demo\AutoCalculatorController;
 use App\Http\Controllers\Demo\BotController;
+use App\Http\Controllers\Demo\CallbackRequestController;
 use App\Http\Controllers\Demo\StockCarController;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +27,12 @@ Route::get('/health', function () {
 Route::prefix('demo')->group(function () {
     Route::get('/auto/reference', [AutoCalculatorController::class, 'reference']);
     Route::post('/auto/calculate', [AutoCalculatorController::class, 'calculate']);
+    Route::get('/auto/history', [AutoCalculatorController::class, 'history']);
+
+    Route::get('/callback-requests', [CallbackRequestController::class, 'index']);
+    Route::get('/callback-requests/summary', [CallbackRequestController::class, 'summary']);
+    Route::patch('/callback-requests/{id}/status', [CallbackRequestController::class, 'updateStatus']);
+    Route::patch('/callback-requests/{id}/message', [CallbackRequestController::class, 'updateMessage']);
 
     Route::get('/stock-cars', [StockCarController::class, 'index']);
     Route::get('/stock-cars/{id}', [StockCarController::class, 'show']);
