@@ -1,0 +1,20 @@
+# Отдельный стек (только фронт). Полный стек с Laravel и edge nginx: каталог backend/ и `docker compose` оттуда (сервисы nginx + frontend).
+# Отдельный стек в Docker Desktop (не внутри backend).
+# Репозиторий: https://github.com/lindrosss/vameo-frontend-react
+name: frontend-vameo
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Всегда относительный путь (не подставлять VITE_API_URL из .env — там часто http://localhost/api → порт 80).
+        VITE_API_URL: "/api"
+    image: ghcr.io/lindrosss/frontend-vameo:latest
+    container_name: frontend-vameo
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

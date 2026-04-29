@@ -1,0 +1,19 @@
+.DS_Store
+.idea/
+.vscode/
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies / builds
+**/node_modules/
+**/vendor/
+**/dist/
+**/public/build/
+
+# Local databases
+**/*.sqlite
+**/*.sqlite-journal
+

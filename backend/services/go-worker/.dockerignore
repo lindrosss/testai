@@ -1,0 +1,4 @@
+# Пересобираем checksums в образе через `go mod tidy`; иначе неполный go.sum с хоста затирает результат
+go.sum
+worker
+*.exe

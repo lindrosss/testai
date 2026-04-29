@@ -1,0 +1,153 @@
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: vameo-nginx
+    ports:
+      # По умолчанию 8080 (macOS, панели). Продакшен с доменом: хостовый nginx на 80 → 127.0.0.1:8080 — см. deploy/nginx-vameo-docker-proxy.conf
+      - "${VAMEO_NGINX_HTTP_PORT:-8080}:80"
+    volumes:
+      - ./services/laravel-app:/var/www/html
+      - ./docker/nginx/default.spa.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - laravel-app
+      - frontend
+    networks:
+      - app-network
+
+  # SPA: тот же образ, что и в frontend-react/Dockerfile. Имя сервиса `frontend` — хост для proxy_pass в edge nginx.
+  frontend:
+    build:
+      context: ../frontend-react
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+    image: ${FRONTEND_IMAGE:-vameo-frontend:local}
+    container_name: vameo-frontend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  laravel-app:
+    build:
+      context: ./services/laravel-app
+      dockerfile: Dockerfile
+    container_name: vameo-laravel
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      # Совпадает с внешним портом nginx (см. VAMEO_NGINX_HTTP_PORT в .env рядом с compose или значение по умолчанию 8080).
+      - APP_URL=http://localhost:${VAMEO_NGINX_HTTP_PORT:-8080}
+      # SPA URL for links inside emails (VerifyEmail page).
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:${FRONTEND_PORT:-3000}}
+      # Явно задаём в контейнере — перекрывает пустой/ошибочный CORS в смонтированном .env
+      - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+      - SANCTUM_STATEFUL_DOMAINS=localhost,localhost:5173,localhost:3000,127.0.0.1,127.0.0.1:5173,127.0.0.1:3000
+      - APP_NAME=Vameo
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=vameo_db
+      - DB_USERNAME=vameo_user
+      - DB_PASSWORD=secret
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_CLIENT=predis
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_VHOST=/
+      - RABBITMQ_LOGIN=guest
+      - RABBITMQ_PASSWORD=guest
+      # Нужен для tymon/jwt-auth (инвайты и т.д.); без него EventController падает с "Secret is not set."
+      - JWT_SECRET=vameo-dev-jwt-secret-change-in-production-min-32chars
+    volumes:
+      - ./services/laravel-app:/var/www/html
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - app-network
+
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: vameo-postgres
+    environment:
+      - POSTGRES_DB=vameo_db
+      - POSTGRES_USER=vameo_user
+      - POSTGRES_PASSWORD=secret
+    ports:
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vameo_user -d vameo_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: vameo-redis
+    ports:
+      - "${REDIS_HOST_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - app-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: vameo-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "${RABBITMQ_HOST_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  go-worker:
+    build:
+      context: ./services/go-worker
+      dockerfile: Dockerfile
+    container_name: vameo-worker
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - RABBITMQ_QUEUE=task_queue
+      - LARAVEL_API_URL=http://nginx/api/internal/email/send
+      - INTERNAL_API_KEY=your-secret-api-key-change-me
+      - METRICS_ADDR=:2112
+    depends_on:
+      - rabbitmq
+      - laravel-app
+    restart: unless-stopped
+    ports:
+      - "${WORKER_METRICS_PORT:-2112}:2112"
+    networks:
+      - app-network

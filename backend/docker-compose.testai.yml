@@ -1,0 +1,26 @@
+services:
+  laravel-app:
+    image: testai:testAI
+    container_name: testai-laravel
+    command: >
+      sh -lc "php artisan migrate --force --seed && php-fpm -F"
+
+  frontend:
+    image: testai-frontend:testAI
+    container_name: testai-frontend
+
+  nginx:
+    container_name: testai-nginx
+
+  postgres:
+    container_name: testai-postgres
+
+  redis:
+    container_name: testai-redis
+
+  rabbitmq:
+    container_name: testai-rabbitmq
+
+  go-worker:
+    container_name: testai-worker
+

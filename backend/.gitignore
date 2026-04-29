@@ -1,0 +1,69 @@
+# Docker
+docker-compose.override.yml
+backend/docker-compose.override.yml
+.env
+.env.production
+
+# Postgres dumps (see docker/postgres/backup.sh)
+/docker/postgres/backups/
+/backend/docker/postgres/backups/
+
+# Laravel — репозиторий с корнем в этом каталоге (vameo-backend)
+/services/laravel-app/.env
+/services/laravel-app/.env.*
+!/services/laravel-app/.env.testing
+!/services/laravel-app/.env.example
+/services/laravel-app/vendor/
+/services/laravel-app/node_modules/
+/services/laravel-app/storage/*.key
+/services/laravel-app/storage/logs/
+/services/laravel-app/storage/framework/sessions/
+/services/laravel-app/storage/framework/views/
+/services/laravel-app/storage/framework/cache/
+/services/laravel-app/bootstrap/cache/*
+!/services/laravel-app/bootstrap/cache/.gitignore
+/services/laravel-app/public/hot
+/services/laravel-app/public/build
+/services/laravel-app/public/storage
+/services/laravel-app/.phpunit.cache
+/services/laravel-app/.phpunit.result.cache
+
+# Laravel — монорепозиторий (корень выше, внутри есть backend/)
+/backend/services/laravel-app/.env
+/backend/services/laravel-app/.env.*
+!/backend/services/laravel-app/.env.testing
+!/backend/services/laravel-app/.env.example
+/backend/services/laravel-app/vendor/
+/backend/services/laravel-app/node_modules/
+/backend/services/laravel-app/storage/*.key
+/backend/services/laravel-app/storage/logs/
+/backend/services/laravel-app/storage/framework/sessions/
+/backend/services/laravel-app/storage/framework/views/
+/backend/services/laravel-app/storage/framework/cache/
+/backend/services/laravel-app/bootstrap/cache/*
+!/backend/services/laravel-app/bootstrap/cache/.gitignore
+/backend/services/laravel-app/public/hot
+/backend/services/laravel-app/public/build
+/backend/services/laravel-app/public/storage
+/backend/services/laravel-app/.phpunit.cache
+/backend/services/laravel-app/.phpunit.result.cache
+
+# Go
+/services/go-worker/worker
+/services/go-worker/*.exe
+/backend/services/go-worker/worker
+/backend/services/go-worker/*.exe
+
+# Test artifacts
+/test-results*.xml
+/backend/test-results*.xml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
