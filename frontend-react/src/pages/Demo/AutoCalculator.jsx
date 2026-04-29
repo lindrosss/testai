@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import useSWR from 'swr';
+import useSWR, { mutate as globalMutate } from 'swr';
 import { Alert } from '../../components/Common/Alert';
 import { Loading } from '../../components/Common/Loading';
 import { calculateAutoCost, fetchAutoHistory, fetchAutoReference } from '../../api/demoAuto';
+import { createCallbackFromCalculator } from '../../api/demoCallbacks';
 
 function money(n) {
   try {
@@ -33,6 +34,9 @@ export function AutoCalculator() {
   const [calc, setCalc] = useState(null);
   const [submitError, setSubmitError] = useState(null);
   const [formError, setFormError] = useState(null);
+  const [callbackPhone, setCallbackPhone] = useState('');
+  const [callbackBusy, setCallbackBusy] = useState(false);
+  const [callbackMsg, setCallbackMsg] = useState(null);
 
   const selectedCar = useMemo(
     () => carModels.find((m) => String(m.id) === String(carModelId)),
@@ -73,6 +77,37 @@ export function AutoCalculator() {
       setSubmitError(msg);
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function onCallbackSubmit(e) {
+    e.preventDefault();
+    setCallbackMsg(null);
+    const raw = callbackPhone.trim();
+    if (!raw) {
+      setCallbackMsg({ type: 'error', text: 'Введите номер телефона (например, +79991234567).' });
+      return;
+    }
+    setCallbackBusy(true);
+    try {
+      await createCallbackFromCalculator(raw);
+      setCallbackPhone('');
+      setCallbackMsg({
+        type: 'ok',
+        text: 'Заявка отправлена. Мы перезвоним — её можно увидеть на вкладке «Перезвонить».',
+      });
+      await globalMutate('demo:callbacks:summary');
+      await globalMutate((key) => Array.isArray(key) && key[0] === 'demo:callbacks');
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        (Array.isArray(err?.response?.data?.errors)
+          ? err.response.data.errors.join(', ')
+          : null) ||
+        'Не удалось создать заявку.';
+      setCallbackMsg({ type: 'error', text: msg });
+    } finally {
+      setCallbackBusy(false);
     }
   }
 
@@ -290,7 +325,51 @@ export function AutoCalculator() {
         ) : history.length === 0 ? (
           <div className="mt-4 text-sm text-slate-600">Пока нет расчётов. Нажмите “Рассчитать”.</div>
         ) : (
-          <div className="mt-4 overflow-auto">
+          <div className="mt-4 space-y-4">
+            <form
+              onSubmit={onCallbackSubmit}
+              className="rounded-2xl border border-indigo-200/80 bg-indigo-50/40 p-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:flex-wrap"
+            >
+              <div className="flex-1 min-w-[200px]">
+                <div className="text-sm font-semibold text-slate-900">Перезвонить</div>
+                <p className="mt-1 text-xs text-slate-600">
+                  Как в боте: оставьте номер — создастся заявка с текущей историей расчётов (до 20 строк).
+                </p>
+                <label className="mt-2 block">
+                  <span className="sr-only">Телефон</span>
+                  <input
+                    type="tel"
+                    value={callbackPhone}
+                    onChange={(e) => {
+                      setCallbackPhone(e.target.value);
+                      setCallbackMsg(null);
+                    }}
+                    placeholder="+79991234567"
+                    autoComplete="tel"
+                    className="mt-1 w-full max-w-sm rounded-2xl border border-slate-300/80 bg-white px-3 py-2 text-sm outline-none transition-shadow focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400"
+                  />
+                </label>
+              </div>
+              <button
+                type="submit"
+                disabled={callbackBusy}
+                className="shrink-0 rounded-2xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-60"
+              >
+                {callbackBusy ? 'Отправка…' : 'Отправить заявку'}
+              </button>
+            </form>
+            {callbackMsg ? (
+              <div
+                className={
+                  callbackMsg.type === 'ok'
+                    ? 'rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-900'
+                    : 'rounded-2xl border border-rose-200 bg-rose-50/80 px-4 py-3 text-sm text-rose-900'
+                }
+              >
+                {callbackMsg.text}
+              </div>
+            ) : null}
+            <div className="overflow-auto">
             <table className="min-w-full text-sm">
               <thead className="bg-slate-50 text-slate-600">
                 <tr>
@@ -337,6 +416,7 @@ export function AutoCalculator() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

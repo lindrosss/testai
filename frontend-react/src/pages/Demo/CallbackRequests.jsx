@@ -23,6 +23,69 @@ function statusLabel(v) {
   return STATUS_OPTIONS.find((o) => o.value === v)?.label || v || '—';
 }
 
+function topicLabel(topic) {
+  if (topic === 'calculator') return 'Калькулятор';
+  if (!topic || topic === 'callback') return 'Бот';
+  return topic;
+}
+
+function moneyUsd(n) {
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(n);
+  } catch {
+    return `$${n}`;
+  }
+}
+
+function CalcHistoryPreview({ items }) {
+  if (!Array.isArray(items) || items.length === 0) return null;
+  return (
+    <div className="mt-2 rounded-2xl border border-slate-200/80 bg-slate-50/80 p-3 overflow-auto max-w-xl">
+      <div className="text-xs font-semibold text-slate-700 mb-2">История расчётов (снимок в заявке)</div>
+      <table className="min-w-full text-xs">
+        <thead className="text-slate-500">
+          <tr>
+            <th className="text-left font-medium py-1 pr-3">Время</th>
+            <th className="text-left font-medium py-1 pr-3">Модель</th>
+            <th className="text-left font-medium py-1 pr-3">Откуда</th>
+            <th className="text-left font-medium py-1 pr-3">Бюджет</th>
+            <th className="text-left font-medium py-1">Итог</th>
+          </tr>
+        </thead>
+        <tbody className="text-slate-800 divide-y divide-slate-200/80">
+          {items.map((h) => (
+            <tr key={h.id || `${h.at}-${h.result?.total_usd}`}>
+              <td className="py-1.5 pr-3 whitespace-nowrap text-slate-500">
+                {h.at ? new Date(h.at).toLocaleString() : '—'}
+              </td>
+              <td className="py-1.5 pr-3">
+                {h.result?.car_model?.brand ? (
+                  <span className="font-medium">
+                    {h.result.car_model.brand} {h.result.car_model.model}
+                  </span>
+                ) : (
+                  '—'
+                )}
+              </td>
+              <td className="py-1.5 pr-3">{h.result?.origin?.name || '—'}</td>
+              <td className="py-1.5 pr-3 font-mono tabular-nums">
+                {h.input?.budget_usd != null ? moneyUsd(h.input.budget_usd) : '—'}
+              </td>
+              <td className="py-1.5 font-mono tabular-nums font-semibold">
+                {h.result?.total_usd != null ? moneyUsd(h.result.total_usd) : '—'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function statusPillClass(v) {
   switch (v) {
     case 'new':
@@ -133,7 +196,7 @@ export function CallbackRequests() {
           <div>
             <h1 className="text-xl font-semibold text-slate-900">Перезвонить</h1>
             <p className="text-sm text-slate-600">
-              История заявок из бота. Меняйте статус, чтобы показать “обработку” лида.
+              Заявки из бота и из калькулятора (с номером и снимком истории расчётов). Меняйте статус, чтобы показать обработку лида.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -184,8 +247,8 @@ export function CallbackRequests() {
                 <tr>
                   <th className="px-6 py-3 text-left font-medium">Дата</th>
                   <th className="px-6 py-3 text-left font-medium">Телефон</th>
-                  <th className="px-6 py-3 text-left font-medium">Тема</th>
-                  <th className="px-6 py-3 text-left font-medium">Сообщение</th>
+                  <th className="px-6 py-3 text-left font-medium">Источник</th>
+                  <th className="px-6 py-3 text-left font-medium">Сообщение / расчёты</th>
                   <th className="px-6 py-3 text-left font-medium">Статус</th>
                   <th className="px-6 py-3 text-right font-medium">Действия</th>
                 </tr>
@@ -199,18 +262,26 @@ export function CallbackRequests() {
                     <td className="px-6 py-3 font-mono tabular-nums text-slate-900">
                       {r.phone}
                     </td>
-                    <td className="px-6 py-3 text-slate-700">{r.topic || 'callback'}</td>
+                    <td className="px-6 py-3 text-slate-700 align-top whitespace-nowrap">
+                      {topicLabel(r.topic)}
+                    </td>
                     <td className="px-6 py-3 text-slate-700 max-w-xl align-top">
-                      <CallbackMessageField
-                        id={r.id}
-                        value={r.message}
-                        disabled={busyId === r.id}
-                        onSaved={async () => {
-                          await mutate();
-                          await globalMutate('demo:callbacks:summary');
-                        }}
-                        onError={(msg) => setOpError(msg)}
-                      />
+                      {r.meta?.calc_history?.length ? (
+                        <CalcHistoryPreview items={r.meta.calc_history} />
+                      ) : null}
+                      <div className={r.meta?.calc_history?.length ? 'mt-3' : ''}>
+                        <div className="text-xs text-slate-500 mb-1">Заметка</div>
+                        <CallbackMessageField
+                          id={r.id}
+                          value={r.message}
+                          disabled={busyId === r.id}
+                          onSaved={async () => {
+                            await mutate();
+                            await globalMutate('demo:callbacks:summary');
+                          }}
+                          onError={(msg) => setOpError(msg)}
+                        />
+                      </div>
                     </td>
                     <td className="px-6 py-3">
                       <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${statusPillClass(r.status)}`}>

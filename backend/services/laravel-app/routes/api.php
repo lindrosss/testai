@@ -30,6 +30,7 @@ Route::prefix('demo')->group(function () {
     Route::get('/auto/history', [AutoCalculatorController::class, 'history']);
 
     Route::get('/callback-requests', [CallbackRequestController::class, 'index']);
+    Route::post('/callback-requests/from-calculator', [CallbackRequestController::class, 'storeFromCalculator']);
     Route::get('/callback-requests/summary', [CallbackRequestController::class, 'summary']);
     Route::patch('/callback-requests/{id}/status', [CallbackRequestController::class, 'updateStatus']);
     Route::patch('/callback-requests/{id}/message', [CallbackRequestController::class, 'updateMessage']);

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Demo\BotMessageRequest;
 use App\Models\CallbackRequest;
 use App\Models\StockCar;
+use App\Support\DemoPhoneNormalizer;
 use Illuminate\Http\JsonResponse;
 
 class BotController extends Controller
@@ -22,7 +23,7 @@ class BotController extends Controller
 
         // Step-based flow: callback phone
         if ($next === 'callback_phone') {
-            $phone = $this->extractPhone($message);
+            $phone = DemoPhoneNormalizer::normalize($message);
             if ($phone === null) {
                 return $this->reply(
                     'Не вижу номер телефона. Напишите, пожалуйста, в формате +7XXXXXXXXXX.',
@@ -129,8 +130,8 @@ class BotController extends Controller
     }
 
     /**
-     * @param array<int,string> $quickReplies
-     * @param array<string,mixed>|null $context
+     * @param  array<int,string>  $quickReplies
+     * @param  array<string,mixed>|null  $context
      */
     private function reply(string $text, array $quickReplies = [], ?array $context = null): JsonResponse
     {
@@ -155,7 +156,7 @@ class BotController extends Controller
     }
 
     /**
-     * @param array<int,string> $needles
+     * @param  array<int,string>  $needles
      */
     private function hasAny(string $haystack, array $needles): bool
     {
@@ -164,26 +165,7 @@ class BotController extends Controller
                 return true;
             }
         }
+
         return false;
     }
-
-    private function extractPhone(string $text): ?string
-    {
-        $digits = preg_replace('/[^\d+]/u', '', $text) ?? '';
-        $digits = str_replace('++', '+', $digits);
-
-        // Basic: +7XXXXXXXXXX or 7XXXXXXXXXX or 8XXXXXXXXXX
-        if (preg_match('/^\+7\d{10}$/', $digits)) {
-            return $digits;
-        }
-        if (preg_match('/^7\d{10}$/', $digits)) {
-            return '+'.$digits;
-        }
-        if (preg_match('/^8\d{10}$/', $digits)) {
-            return '+7'.substr($digits, 1);
-        }
-
-        return null;
-    }
 }
-

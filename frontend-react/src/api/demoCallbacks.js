@@ -25,3 +25,12 @@ export async function updateCallbackMessage(id, message) {
   return data;
 }
 
+export async function createCallbackFromCalculator(phone) {
+  const { data } = await api.post(
+    '/demo/callback-requests/from-calculator',
+    { phone },
+    { headers: demoHeaders() },
+  );
+  return data;
+}
+

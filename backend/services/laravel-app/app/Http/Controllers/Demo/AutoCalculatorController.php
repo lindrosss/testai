@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Demo;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Demo\Concerns\ResolvesDemoAutoClient;
 use App\Http\Requests\Demo\AutoCalculateRequest;
 use App\Models\CarModel;
 use App\Models\ShippingOrigin;
@@ -16,8 +17,12 @@ use Illuminate\Support\Str;
 
 class AutoCalculatorController extends Controller
 {
+    use ResolvesDemoAutoClient;
+
     private const CALC_CACHE_TTL_SECONDS = 3600; // 1 hour
+
     private const HISTORY_TTL_SECONDS = 604800; // 7 days
+
     private const HISTORY_MAX_ITEMS = 20;
 
     public function reference(AutoCostCalculator $calculator): JsonResponse
@@ -36,6 +41,7 @@ class AutoCalculatorController extends Controller
             'car_models' => $models->map(function (CarModel $m) use ($calculator) {
                 $arr = $m->toArray();
                 $arr['recycling'] = $calculator->recyclingPreview((int) $m->engine_power_hp);
+
                 return $arr;
             })->values(),
             'shipping_origins' => $origins,
@@ -46,7 +52,7 @@ class AutoCalculatorController extends Controller
     {
         $data = $request->validated();
 
-        $clientKey = $this->clientKey($request);
+        $clientKey = $this->demoAutoClientKey($request);
         $budgetUsd = (int) $data['budget_usd'];
         $carModelId = (int) $data['car_model_id'];
         $calcCacheKey = $this->calcCacheKey($clientKey, $carModelId, $budgetUsd);
@@ -75,6 +81,7 @@ class AutoCalculatorController extends Controller
                 $cached['meta'] = array_merge((array) ($cached['meta'] ?? []), [
                     'from_cache' => true,
                 ]);
+
                 return response()->json($cached);
             }
         }
@@ -115,37 +122,11 @@ class AutoCalculatorController extends Controller
 
     public function history(Request $request): JsonResponse
     {
-        $clientKey = $this->clientKey($request);
-        $historyKey = $this->historyKey($clientKey);
-        $redis = Redis::connection('cache');
-
-        $raw = $redis->lrange($historyKey, 0, self::HISTORY_MAX_ITEMS - 1);
-        $items = [];
-        foreach ($raw as $row) {
-            if (!is_string($row) || $row === '') {
-                continue;
-            }
-            $decoded = json_decode($row, true);
-            if (is_array($decoded)) {
-                $items[] = $decoded;
-            }
-        }
+        $items = $this->demoAutoHistoryFromRedis($request, self::HISTORY_MAX_ITEMS);
 
         return response()->json([
             'data' => $items,
         ]);
-    }
-
-    private function clientKey(Request $request): string
-    {
-        $h = (string) $request->header('X-Demo-Client', '');
-        if ($h !== '' && preg_match('/^[a-zA-Z0-9_-]{8,80}$/', $h)) {
-            return $h;
-        }
-
-        $fallback = ($request->ip() ?? '0.0.0.0').'|'.(string) $request->userAgent();
-
-        return 'ip_'.substr(hash('sha256', $fallback), 0, 16);
     }
 
     private function calcCacheKey(string $clientKey, int $carModelId, int $budgetUsd): string
@@ -159,7 +140,7 @@ class AutoCalculatorController extends Controller
     }
 
     /**
-     * @param array<string,mixed> $entry
+     * @param  array<string,mixed>  $entry
      */
     private function pushHistory($redis, string $key, array $entry): void
     {
@@ -168,4 +149,3 @@ class AutoCalculatorController extends Controller
         $redis->expire($key, self::HISTORY_TTL_SECONDS);
     }
 }
-

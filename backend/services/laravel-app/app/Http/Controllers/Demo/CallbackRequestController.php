@@ -5,14 +5,19 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Demo;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Demo\Concerns\ResolvesDemoAutoClient;
+use App\Http\Requests\Demo\CallbackFromCalculatorRequest;
 use App\Http\Requests\Demo\CallbackRequestMessageRequest;
 use App\Http\Requests\Demo\CallbackRequestStatusRequest;
 use App\Models\CallbackRequest;
+use App\Support\DemoPhoneNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CallbackRequestController extends Controller
 {
+    use ResolvesDemoAutoClient;
+
     public function index(Request $request): JsonResponse
     {
         $status = $request->query('status');
@@ -27,6 +32,39 @@ class CallbackRequestController extends Controller
         return response()->json([
             'data' => $q->paginate(20),
         ]);
+    }
+
+    public function storeFromCalculator(CallbackFromCalculatorRequest $request): JsonResponse
+    {
+        $rawPhone = (string) $request->validated('phone');
+        $phone = DemoPhoneNormalizer::normalize($rawPhone);
+        if ($phone === null) {
+            return response()->json([
+                'message' => 'Не вижу номер телефона. Укажите в формате +7XXXXXXXXXX.',
+            ], 422);
+        }
+
+        $history = $this->demoAutoHistoryFromRedis($request, 20);
+        if ($history === []) {
+            return response()->json([
+                'message' => 'История расчётов пуста. Сначала выполните хотя бы один расчёт.',
+            ], 422);
+        }
+
+        $row = CallbackRequest::query()->create([
+            'phone' => $phone,
+            'topic' => 'calculator',
+            'message' => null,
+            'status' => 'new',
+            'meta' => [
+                'source' => 'calculator',
+                'calc_history' => $history,
+            ],
+        ]);
+
+        return response()->json([
+            'data' => $row,
+        ], 201);
     }
 
     public function summary(): JsonResponse
@@ -67,4 +105,3 @@ class CallbackRequestController extends Controller
         ]);
     }
 }
-

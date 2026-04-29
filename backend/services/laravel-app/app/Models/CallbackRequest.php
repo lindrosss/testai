@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $phone
  * @property string $topic
  * @property string|null $message
+ * @property array<string, mixed>|null $meta
  * @property string $status
  */
 class CallbackRequest extends Model
@@ -21,7 +22,17 @@ class CallbackRequest extends Model
         'phone',
         'topic',
         'message',
+        'meta',
         'status',
     ];
-}
 
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'meta' => 'array',
+        ];
+    }
+}
