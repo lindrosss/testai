@@ -1,5 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { useState } from 'react';
 import { ChatWidget } from '../ChatWidget';
+import { HelpModal } from '../HelpModal';
 
 function TabLink({ to, children }) {
   return (
@@ -21,6 +23,8 @@ function TabLink({ to, children }) {
 }
 
 export function PublicLayout() {
+  const [helpOpen, setHelpOpen] = useState(false);
+
   return (
     <div className="min-h-screen">
       <div className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-slate-200">
@@ -39,6 +43,13 @@ export function PublicLayout() {
           <div className="flex items-center gap-1">
             <TabLink to="/demo/auto">Калькулятор</TabLink>
             <TabLink to="/demo/stock">Склад</TabLink>
+            <button
+              type="button"
+              onClick={() => setHelpOpen(true)}
+              className="ml-1 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition"
+            >
+              Справка
+            </button>
           </div>
         </div>
       </div>
@@ -48,6 +59,8 @@ export function PublicLayout() {
       </main>
 
       <ChatWidget />
+
+      <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   );
 }
