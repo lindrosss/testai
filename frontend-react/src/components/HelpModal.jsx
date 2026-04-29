@@ -24,23 +24,24 @@ export function HelpModal({ open, onClose }) {
   return (
     <div className="fixed inset-0 z-40">
       <div
-        className="absolute inset-0 bg-slate-900/40"
+        className="absolute inset-0 bg-slate-900/45 backdrop-blur-[2px]"
         onClick={() => onClose?.()}
       />
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-3xl rounded-2xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
-          <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
+        <div className="w-full max-w-3xl rounded-3xl border border-slate-200 bg-white shadow-2xl overflow-hidden">
+          <div className="relative px-5 py-4 border-b border-slate-200">
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-sky-500/10 to-transparent" />
             <div className="min-w-0">
-              <div className="text-sm font-semibold text-slate-900">
+              <div className="relative text-sm font-semibold text-slate-900">
                 Справка: логика приложения
               </div>
-              <div className="text-xs text-slate-500">
+              <div className="relative text-xs text-slate-500">
                 Калькулятор “под ключ” + склад + бот (демо)
               </div>
             </div>
             <button
               onClick={() => onClose?.()}
-              className="rounded-lg px-2 py-1 text-sm text-slate-600 hover:bg-slate-100"
+              className="absolute right-4 top-4 rounded-xl px-3 py-1.5 text-sm text-slate-700 hover:bg-white/70"
               type="button"
             >
               Закрыть
@@ -96,10 +97,9 @@ export function HelpModal({ open, onClose }) {
               </ul>
             </Section>
 
-            <div className="rounded-xl border border-slate-200 bg-white p-4">
-              <div className="text-xs text-slate-500">
-                Подсказка: нажмите <span className="font-medium">Esc</span>, чтобы
-                закрыть окно.
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="text-xs text-slate-600">
+                Подсказка: нажмите <span className="font-semibold">Esc</span>, чтобы закрыть окно.
               </div>
             </div>
           </div>

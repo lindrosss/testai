@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Demo;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Demo\AutoCalculateRequest;
 use App\Models\CarModel;
+use App\Models\ShippingOrigin;
 use App\Services\AutoCostCalculator;
 use Illuminate\Http\JsonResponse;
 
@@ -20,8 +21,13 @@ class AutoCalculatorController extends Controller
             ->orderBy('model')
             ->get(['id', 'brand', 'model', 'engine_power_hp', 'market_price_usd', 'shipping_origin_id']);
 
+        $origins = ShippingOrigin::query()
+            ->orderBy('name')
+            ->get(['id', 'code', 'name', 'logistics_cost_usd', 'lead_time_days_min', 'lead_time_days_max']);
+
         return response()->json([
             'car_models' => $models,
+            'shipping_origins' => $origins,
         ]);
     }
 

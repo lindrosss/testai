@@ -70,7 +70,7 @@ export function AutoCalculator() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-[1px]">
         <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-xl font-semibold text-slate-900">
@@ -104,7 +104,7 @@ export function AutoCalculator() {
                     setCarModelId(e.target.value);
                     setFormError(null);
                   }}
-                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900/10"
+                  className="mt-1 w-full rounded-2xl border border-slate-300/80 bg-white/80 px-3 py-2 text-sm outline-none transition-shadow focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400"
                 >
                   <option value="" disabled>
                     Выберите модель…
@@ -129,7 +129,7 @@ export function AutoCalculator() {
                   step={1}
                   value={budgetUsd}
                   onChange={(e) => setBudgetUsd(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900/10"
+                  className="mt-1 w-full rounded-2xl border border-slate-300/80 bg-white/80 px-3 py-2 text-sm outline-none transition-shadow focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400"
                   required
                 />
               </label>
@@ -148,7 +148,10 @@ export function AutoCalculator() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 disabled:opacity-60"
+                  className="inline-flex items-center justify-center rounded-2xl px-4 py-2 text-sm font-semibold text-white shadow-sm
+                    bg-gradient-to-br from-indigo-600 via-sky-600 to-cyan-500 app-gradient-animate
+                    hover:shadow-md hover:-translate-y-[1px] active:translate-y-0 transition-transform
+                    disabled:opacity-60 disabled:hover:translate-y-0"
                 >
                   {submitting ? 'Считаю…' : 'Рассчитать'}
                 </button>
@@ -164,11 +167,11 @@ export function AutoCalculator() {
 
       {calc ? (
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="md:col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="md:col-span-2 rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-[1px]">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="text-sm text-slate-500">Итог</div>
-                <div className="text-3xl font-semibold text-slate-900">
+                <div className="text-3xl font-semibold text-slate-900 font-mono tabular-nums">
                   {money(calc.total_usd)}
                 </div>
               </div>
@@ -182,7 +185,7 @@ export function AutoCalculator() {
               {Object.entries(calc.breakdown || {}).map(([key, row]) => (
                 <div
                   key={key}
-                  className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 px-4 py-3"
+                  className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white/60 px-4 py-3 transition-all duration-300 hover:bg-white hover:shadow-sm hover:-translate-y-[1px]"
                 >
                   <div>
                     <div className="text-sm font-medium text-slate-900">
@@ -211,7 +214,7 @@ export function AutoCalculator() {
                       </div>
                     ) : null}
                   </div>
-                  <div className="text-sm font-semibold text-slate-900">
+                  <div className="text-sm font-semibold text-slate-900 font-mono tabular-nums">
                     {money(row.amount_usd)}
                   </div>
                 </div>
@@ -219,7 +222,7 @@ export function AutoCalculator() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-[1px]">
             <div className="text-sm font-semibold text-slate-900">Что это демонстрирует</div>
             <ul className="mt-3 space-y-2 text-sm text-slate-700">
               <li>
@@ -235,7 +238,7 @@ export function AutoCalculator() {
                 - API отдаёт breakdown для прозрачности расчёта
               </li>
             </ul>
-            <div className="mt-4 rounded-xl bg-slate-50 border border-slate-200 p-4">
+            <div className="mt-4 rounded-2xl bg-slate-50/80 border border-slate-200 p-4">
               <div className="text-xs font-medium text-slate-600">
                 Демо‑допущение
               </div>

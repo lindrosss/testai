@@ -40,14 +40,14 @@ function Modal({ open, title, children, onClose }) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-20">
-      <div className="absolute inset-0 bg-slate-900/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-slate-900/45 backdrop-blur-[2px]" onClick={onClose} />
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-xl">
+        <div className="w-full max-w-2xl rounded-3xl border border-slate-200 bg-white/90 backdrop-blur shadow-2xl app-enter">
           <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
             <div className="text-sm font-semibold text-slate-900">{title}</div>
             <button
               onClick={onClose}
-              className="rounded-lg px-2 py-1 text-sm text-slate-600 hover:bg-slate-100"
+              className="rounded-xl px-3 py-1.5 text-sm text-slate-700 hover:bg-white/70"
             >
               Закрыть
             </button>
@@ -154,7 +154,7 @@ export function StockCars() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur p-6 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-[1px]">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-xl font-semibold text-slate-900">Склад клиента</h1>
@@ -166,7 +166,7 @@ export function StockCars() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-900/10"
+              className="rounded-2xl border border-slate-300/80 bg-white/80 px-3 py-2 text-sm outline-none transition-shadow focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-400"
             >
               <option value="">Все статусы</option>
               <option value="in_stock">В наличии</option>
@@ -175,7 +175,10 @@ export function StockCars() {
             </select>
             <button
               onClick={openCreate}
-              className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800 disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-2xl px-4 py-2 text-sm font-semibold text-white shadow-sm
+                bg-gradient-to-br from-indigo-600 via-sky-600 to-cyan-500 app-gradient-animate
+                hover:shadow-md hover:-translate-y-[1px] active:translate-y-0 transition-transform
+                disabled:opacity-60 disabled:hover:translate-y-0"
               disabled={refLoading || !!refError}
             >
               Добавить
@@ -188,7 +191,7 @@ export function StockCars() {
         <Alert type="error" title="Справочники недоступны" message="Не могу загрузить модели/направления." />
       ) : null}
 
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-3xl border border-slate-200/80 bg-white/80 backdrop-blur shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-[1px]">
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
           <div className="text-sm font-semibold text-slate-900">Позиции</div>
           <div className="text-xs text-slate-500">
@@ -221,7 +224,7 @@ export function StockCars() {
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {cars.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50/70">
+                  <tr key={c.id} className="hover:bg-white/70 transition-colors">
                     <td className="px-6 py-3 whitespace-nowrap text-slate-700">
                       {c.vin || <span className="text-slate-400">—</span>}
                     </td>
@@ -234,21 +237,23 @@ export function StockCars() {
                     <td className="px-6 py-3 text-slate-700">
                       {c.shipping_origin?.name}
                     </td>
-                    <td className="px-6 py-3 text-slate-700">{money(c.purchase_price_usd)}</td>
+                    <td className="px-6 py-3 text-slate-700 font-mono tabular-nums">
+                      {money(c.purchase_price_usd)}
+                    </td>
                     <td className="px-6 py-3">
                       <StatusPill status={c.status} />
                     </td>
                     <td className="px-6 py-3 text-right whitespace-nowrap">
                       <button
                         onClick={() => openEdit(c)}
-                        className="rounded-lg px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
+                        className="rounded-xl px-3 py-1.5 text-sm text-slate-700 hover:bg-white/80 hover:-translate-y-[1px] transition-transform"
                         disabled={busy}
                       >
                         Изменить
                       </button>
                       <button
                         onClick={() => onDelete(c.id)}
-                        className="rounded-lg px-3 py-1.5 text-sm text-rose-700 hover:bg-rose-50"
+                        className="rounded-xl px-3 py-1.5 text-sm text-rose-700 hover:bg-rose-50 hover:-translate-y-[1px] transition-transform"
                         disabled={busy}
                       >
                         Удалить
